@@ -16,11 +16,35 @@ linters:
       - path: _test\.go
         linters:
           - funlen
+          - exhaustruct
 
 formatters:
+  exclusions:
+
   enable:
+    - gci
     - gofmt
+    - gofumpt
     - goimports
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/therenotomorrow/tasker)
+#      no-inline-comments: true
+#      no-prefix-comments: true
+#      custom-order: true
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+    golines:
+      max-len: 120
+      tab-len: 4
+      shorten-comments: true
 
 issues:
   fix: true

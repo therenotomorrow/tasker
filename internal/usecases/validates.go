@@ -3,10 +3,11 @@ package usecases
 import (
 	"strconv"
 	"strings"
-	"tasker/internal/domain"
+
+	"github.com/therenotomorrow/tasker/internal/domain"
 )
 
-func (use UseCases) validateDescription(description string) (string, error) {
+func (use *UseCases) validateDescription(description string) (string, error) {
 	description = strings.TrimSpace(description)
 
 	if description == "" {
@@ -16,9 +17,8 @@ func (use UseCases) validateDescription(description string) (string, error) {
 	return description, nil
 }
 
-func (use UseCases) validateTaskID(id string) (uint64, error) {
+func (use *UseCases) validateTaskID(id string) (uint64, error) {
 	taskID, err := strconv.ParseUint(id, 10, 64)
-
 	if err != nil {
 		return 0, domain.ErrInvalidTaskID
 	}
@@ -26,9 +26,8 @@ func (use UseCases) validateTaskID(id string) (uint64, error) {
 	return taskID, nil
 }
 
-func (use UseCases) validateStatus(status string) (domain.Status, error) {
+func (use *UseCases) validateStatus(status string) (domain.Status, error) {
 	stat, err := domain.NewStatus(status)
-
 	if err != nil {
 		return "", domain.ErrInvalidStatus
 	}

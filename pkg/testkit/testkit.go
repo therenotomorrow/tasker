@@ -6,4 +6,10 @@ func (e constError) Error() string {
 	return string(e)
 }
 
-const ErrDummy constError = "dummy"
+const (
+	ErrDummy         constError = "dummy"
+	ErrUnimplemented constError = "unimplemented"
+
+	FailureTest = "failure"
+	SuccessTest = "success"
+)

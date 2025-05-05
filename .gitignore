@@ -7,6 +7,9 @@
 *.json
 coverage.out
 
+# testdata
+!/test/data/*.json
+
 # hidden entities
 .ignore*
 ignore*

@@ -3,14 +3,15 @@ package storage
 import (
 	"context"
 	"fmt"
-	"tasker/internal/domain"
-	"tasker/pkg/jsonfile"
+
+	"github.com/therenotomorrow/tasker/internal/domain"
+	"github.com/therenotomorrow/tasker/pkg/jsonfile"
 )
 
 const name = "Storage"
 
 type Storage struct {
-	fs     *jsonfile.JSONFile[Tasks]
+	engine *jsonfile.JSONFile[Tasks]
 	lastID uint64
 }
 
@@ -31,7 +32,7 @@ func New(config jsonfile.Config) (*Storage, error) {
 		lastID = max(lastID, task.ID)
 	}
 
-	return &Storage{fs: jsonfs, lastID: lastID}, nil
+	return &Storage{engine: jsonfs, lastID: lastID}, nil
 }
 
 func MustNew(config jsonfile.Config) *Storage {
@@ -43,8 +44,12 @@ func MustNew(config jsonfile.Config) *Storage {
 	return storage
 }
 
+func (s *Storage) LastID() uint64 {
+	return s.lastID
+}
+
 func (s *Storage) SaveTask(_ context.Context, task *domain.Task) (*domain.Task, error) {
-	tasks, err := s.fs.Load()
+	tasks, err := s.engine.Load()
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", name, err)
 	}
@@ -53,7 +58,7 @@ func (s *Storage) SaveTask(_ context.Context, task *domain.Task) (*domain.Task, 
 	task.ID = s.lastID
 	tasks[task.ID] = fromTask(task)
 
-	err = s.fs.Save(tasks)
+	err = s.engine.Save(tasks)
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", name, err)
 	}
@@ -61,15 +66,15 @@ func (s *Storage) SaveTask(_ context.Context, task *domain.Task) (*domain.Task, 
 	return task, nil
 }
 
-func (s *Storage) UpdateTask(ctx context.Context, task *domain.Task) error {
-	tasks, err := s.loadIfExist(ctx, task.ID)
+func (s *Storage) UpdateTask(_ context.Context, task *domain.Task) error {
+	tasks, err := s.engine.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("%s error: %w", name, err)
 	}
 
 	tasks[task.ID] = fromTask(task)
 
-	err = s.fs.Save(tasks)
+	err = s.engine.Save(tasks)
 	if err != nil {
 		return fmt.Errorf("%s error: %w", name, err)
 	}
@@ -77,15 +82,15 @@ func (s *Storage) UpdateTask(ctx context.Context, task *domain.Task) error {
 	return nil
 }
 
-func (s *Storage) DeleteTask(ctx context.Context, tid uint64) error {
-	tasks, err := s.loadIfExist(ctx, tid)
+func (s *Storage) DeleteTask(_ context.Context, task *domain.Task) error {
+	tasks, err := s.engine.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("%s error: %w", name, err)
 	}
 
-	delete(tasks, tid)
+	delete(tasks, task.ID)
 
-	err = s.fs.Save(tasks)
+	err = s.engine.Save(tasks)
 	if err != nil {
 		return fmt.Errorf("%s error: %w", name, err)
 	}
@@ -93,17 +98,21 @@ func (s *Storage) DeleteTask(ctx context.Context, tid uint64) error {
 	return nil
 }
 
-func (s *Storage) GetByID(ctx context.Context, tid uint64) (*domain.Task, error) {
-	tasks, err := s.loadIfExist(ctx, tid)
+func (s *Storage) GetByID(_ context.Context, tid uint64) (*domain.Task, error) {
+	tasks, err := s.engine.Load()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s error: %w", name, err)
+	}
+
+	if _, ok := tasks[tid]; !ok {
+		return nil, fmt.Errorf("%s error: %w", name, domain.ErrTaskNotFound)
 	}
 
 	return toTask(tasks[tid]), nil
 }
 
 func (s *Storage) ListAll(_ context.Context) ([]*domain.Task, error) {
-	tasks, err := s.fs.Load()
+	tasks, err := s.engine.Load()
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", name, err)
 	}
@@ -113,15 +122,11 @@ func (s *Storage) ListAll(_ context.Context) ([]*domain.Task, error) {
 		list = append(list, toTask(task))
 	}
 
-	if len(list) == 0 {
-		return nil, fmt.Errorf("%s error: %w", name, domain.ErrEmptyTasks)
-	}
-
 	return list, nil
 }
 
 func (s *Storage) ListByStatus(_ context.Context, status domain.Status) ([]*domain.Task, error) {
-	tasks, err := s.fs.Load()
+	tasks, err := s.engine.Load()
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", name, err)
 	}
@@ -129,13 +134,11 @@ func (s *Storage) ListByStatus(_ context.Context, status domain.Status) ([]*doma
 	list := make([]*domain.Task, 0)
 
 	for _, task := range tasks {
-		if task.Status == status {
-			list = append(list, toTask(task))
-		}
-	}
+		domTask := toTask(task)
 
-	if len(list) == 0 {
-		return nil, fmt.Errorf("%s error: %w", name, domain.ErrEmptyTasks)
+		if domTask.Status == status {
+			list = append(list, domTask)
+		}
 	}
 
 	return list, nil

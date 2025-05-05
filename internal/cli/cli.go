@@ -2,8 +2,9 @@ package cli
 
 import (
 	"context"
-	"tasker/internal/usecases"
 	"text/template"
+
+	"github.com/therenotomorrow/tasker/internal/usecases"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 )
 
 type Cli struct {
-	useCases  *usecases.UseCases
+	use       usecases.Use
 	templates *template.Template
 }
 
@@ -28,7 +29,7 @@ func New(storage usecases.Storage) (*Cli, error) {
 		return nil, err
 	}
 
-	return &Cli{useCases: usecases.New(storage), templates: templates}, nil
+	return &Cli{use: usecases.New(storage), templates: templates}, nil
 }
 
 func MustNew(storage usecases.Storage) *Cli {
@@ -40,9 +41,15 @@ func MustNew(storage usecases.Storage) *Cli {
 	return cli
 }
 
+func (cli *Cli) WithOverride(use usecases.Use) *Cli {
+	cli.use = use
+
+	return cli
+}
+
 func (cli *Cli) Dispatch(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
-		return cli.usage()
+		return cli.Usage()
 	}
 
 	command, args := args[0], args[1:]
@@ -53,22 +60,22 @@ func (cli *Cli) Dispatch(ctx context.Context, args []string) int {
 func (cli *Cli) dispatch(ctx context.Context, command string, args []string) int {
 	switch command {
 	case "add":
-		return cli.add(ctx, args)
+		return cli.Add(ctx, args)
 	case "update":
-		return cli.update(ctx, args)
+		return cli.Update(ctx, args)
 	case "delete":
-		return cli.delete(ctx, args)
+		return cli.Delete(ctx, args)
 	case "mark":
-		return cli.mark(ctx, args)
+		return cli.Mark(ctx, args)
 	case "work":
-		return cli.work(ctx, args)
+		return cli.Work(ctx, args)
 	case "done":
-		return cli.done(ctx, args)
+		return cli.Done(ctx, args)
 	case "list":
-		return cli.list(ctx, args)
+		return cli.List(ctx, args)
 	case "help":
-		return cli.help()
+		return cli.Help()
 	default:
-		return cli.unknown(command)
+		return cli.Unknown(command)
 	}
 }

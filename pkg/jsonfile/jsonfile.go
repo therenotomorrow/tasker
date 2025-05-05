@@ -2,6 +2,7 @@ package jsonfile
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,12 +11,10 @@ import (
 const (
 	name = "JSONFile"
 
-	defaultDirPerms = 0750
-	defaultFilePerm = 0600
+	defaultFilePerm = 0o600
 )
 
 type Config struct {
-	Dir  string
 	File string
 }
 
@@ -25,12 +24,7 @@ type JSONFile[T any] struct {
 }
 
 func New[T any](config Config) (*JSONFile[T], error) {
-	err := os.MkdirAll(config.Dir, defaultDirPerms)
-	if err != nil {
-		return nil, fmt.Errorf("%s error: %w", name, err)
-	}
-
-	filename, err := createIfNotExist(filepath.Join(config.Dir, config.File))
+	filename, err := createIfNotExist(config.File)
 	if err != nil {
 		return nil, err
 	}
@@ -73,4 +67,26 @@ func (fs *JSONFile[T]) Save(data T) error {
 	}
 
 	return nil
+}
+
+func createIfNotExist(filename string) (string, error) {
+	filename = filepath.Clean(filename)
+
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, defaultFilePerm)
+
+	switch {
+	case errors.Is(err, os.ErrExist):
+		return filename, nil
+	case err != nil:
+		return "", fmt.Errorf("%s error: %w", name, err)
+	}
+
+	defer func() { _ = file.Close() }()
+
+	_, err = file.WriteString("{}")
+	if err != nil {
+		return "", fmt.Errorf("%s error: %w", name, err)
+	}
+
+	return filename, nil
 }

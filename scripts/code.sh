@@ -18,6 +18,6 @@ fi
 
 # ---- processing
 
-gofmt -w -s . && "$GOLANGCI_LINT" run ./...
+"$GOLANGCI_LINT" run ./...
 
 go build -o "$BIN"/tasker "$PWD"/cmd/tasker/main.go

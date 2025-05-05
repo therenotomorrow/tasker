@@ -1,66 +1,37 @@
 package usecases_test
 
 import (
-	"context"
-	"tasker/internal/domain"
-	"tasker/pkg/testkit"
+	"testing"
+
+	"github.com/therenotomorrow/tasker/internal/usecases"
 )
 
-type StorageMock struct {
-	Data map[uint64]*domain.Task
+func TestUnitStorageSaver(t *testing.T) {
+	t.Parallel()
 
-	SaveTaskFunc     func(ctx context.Context, task *domain.Task) (*domain.Task, error)
-	UpdateTaskFunc   func(ctx context.Context, task *domain.Task) error
-	DeleteTaskFunc   func(ctx context.Context, tid uint64) error
-	GetByIDFunc      func(ctx context.Context, tid uint64) (*domain.Task, error)
-	ListAllFunc      func(ctx context.Context) ([]*domain.Task, error)
-	ListByStatusFunc func(ctx context.Context, status domain.Status) ([]*domain.Task, error)
+	var _ usecases.Saver = usecases.Storage(nil)
 }
 
-func (s *StorageMock) SaveTask(ctx context.Context, task *domain.Task) (*domain.Task, error) {
-	if s.SaveTaskFunc == nil {
-		panic(testkit.ErrDummy)
-	}
+func TestUnitStorageUpdater(t *testing.T) {
+	t.Parallel()
 
-	return s.SaveTaskFunc(ctx, task)
+	var _ usecases.Updater = usecases.Storage(nil)
 }
 
-func (s *StorageMock) UpdateTask(ctx context.Context, task *domain.Task) error {
-	if s.UpdateTaskFunc == nil {
-		panic(testkit.ErrDummy)
-	}
+func TestUnitStorageDeleter(t *testing.T) {
+	t.Parallel()
 
-	return s.UpdateTaskFunc(ctx, task)
+	var _ usecases.Deleter = usecases.Storage(nil)
 }
 
-func (s *StorageMock) DeleteTask(ctx context.Context, tid uint64) error {
-	if s.DeleteTaskFunc == nil {
-		panic(testkit.ErrDummy)
-	}
+func TestUnitStorageRetriever(t *testing.T) {
+	t.Parallel()
 
-	return s.DeleteTaskFunc(ctx, tid)
+	var _ usecases.Retriever = usecases.Storage(nil)
 }
 
-func (s *StorageMock) GetByID(ctx context.Context, tid uint64) (*domain.Task, error) {
-	if s.GetByIDFunc == nil {
-		panic(testkit.ErrDummy)
-	}
+func TestUnitUse(t *testing.T) {
+	t.Parallel()
 
-	return s.GetByIDFunc(ctx, tid)
-}
-
-func (s *StorageMock) ListAll(ctx context.Context) ([]*domain.Task, error) {
-	if s.ListAllFunc == nil {
-		panic(testkit.ErrDummy)
-	}
-
-	return s.ListAllFunc(ctx)
-}
-
-func (s *StorageMock) ListByStatus(ctx context.Context, status domain.Status) ([]*domain.Task, error) {
-	if s.ListByStatusFunc == nil {
-		panic(testkit.ErrDummy)
-	}
-
-	return s.ListByStatusFunc(ctx, status)
+	var _ usecases.Use = new(usecases.UseCases)
 }

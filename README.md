@@ -37,8 +37,8 @@ Taste it :heart:
 make code
 # run application
 ./bin/tasker help
-# use custom folder for run
-TASKER_DIR=custom ./bin/tasker help
+# use custom file
+TASKER_FILE=custom.json ./bin/tasker help
 ```
 
 Setup safe development
