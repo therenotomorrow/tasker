@@ -10,6 +10,12 @@ linters:
       allow:
         - error
         - generic
+  exclusions:
+    rules:
+      # simple rules for tests
+      - path: _test\.go
+        linters:
+          - funlen
 
 formatters:
   enable:
