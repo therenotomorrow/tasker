@@ -1,14 +1,14 @@
 package testkit
 
-type constError string
+type ConstError string
 
-func (e constError) Error() string {
+func (e ConstError) Error() string {
 	return string(e)
 }
 
 const (
-	ErrDummy         constError = "dummy"
-	ErrUnimplemented constError = "unimplemented"
+	ErrDummy         ConstError = "dummy"
+	ErrUnimplemented ConstError = "unimplemented"
 
 	FailureTest = "failure"
 	SuccessTest = "success"

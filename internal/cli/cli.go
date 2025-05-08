@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"io"
+	"os"
 	"text/template"
 
 	"github.com/therenotomorrow/tasker/internal/usecases"
@@ -18,33 +20,26 @@ const (
 	twoArgs = 2
 )
 
+type Config struct {
+	Output  io.Writer
+	Storage usecases.Storage
+}
+
 type Cli struct {
-	use       usecases.Use
+	config    Config
+	use       *usecases.UseCases
 	templates *template.Template
 }
 
-func New(storage usecases.Storage) (*Cli, error) {
-	templates, err := compileTemplates()
-	if err != nil {
-		return nil, err
+func New(config Config) *Cli {
+	use := usecases.New(config.Storage)
+	templates := compileTemplates()
+
+	if config.Output == nil {
+		config.Output = os.Stdout
 	}
 
-	return &Cli{use: usecases.New(storage), templates: templates}, nil
-}
-
-func MustNew(storage usecases.Storage) *Cli {
-	cli, err := New(storage)
-	if err != nil {
-		panic(err)
-	}
-
-	return cli
-}
-
-func (cli *Cli) WithOverride(use usecases.Use) *Cli {
-	cli.use = use
-
-	return cli
+	return &Cli{use: use, config: config, templates: templates}
 }
 
 func (cli *Cli) Dispatch(ctx context.Context, args []string) int {

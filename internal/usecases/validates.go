@@ -17,8 +17,8 @@ func (use *UseCases) validateDescription(description string) (string, error) {
 	return description, nil
 }
 
-func (use *UseCases) validateTaskID(id string) (uint64, error) {
-	taskID, err := strconv.ParseUint(id, 10, 64)
+func (use *UseCases) validateTaskID(tid string) (uint64, error) {
+	taskID, err := strconv.ParseUint(tid, 10, 64)
 	if err != nil {
 		return 0, domain.ErrInvalidTaskID
 	}

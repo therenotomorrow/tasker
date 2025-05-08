@@ -29,9 +29,3 @@ func TestUnitStorageRetriever(t *testing.T) {
 
 	var _ usecases.Retriever = usecases.Storage(nil)
 }
-
-func TestUnitUse(t *testing.T) {
-	t.Parallel()
-
-	var _ usecases.Use = new(usecases.UseCases)
-}

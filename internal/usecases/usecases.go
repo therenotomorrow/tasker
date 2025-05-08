@@ -70,10 +70,10 @@ func (use *UseCases) UpdateTask(ctx context.Context, tid string, description str
 	return task, nil
 }
 
-func (use *UseCases) DeleteTask(ctx context.Context, id string) error {
+func (use *UseCases) DeleteTask(ctx context.Context, tid string) error {
 	const where = "DeleteTask"
 
-	taskID, err := use.validateTaskID(id)
+	taskID, err := use.validateTaskID(tid)
 	if err != nil {
 		return fmt.Errorf("%s error: %w", where, err)
 	}
