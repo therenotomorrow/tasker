@@ -14,8 +14,12 @@ func main() {
 	ctx := context.Background()
 	file := cmp.Or(os.Getenv("TASKER_FILE"), "tasker.json")
 
-	config := jsonfile.Config{File: file}
-	tasker := cli.MustNew(storage.MustNew(config))
+	config := cli.Config{
+		Output:  os.Stdout,
+		Storage: storage.MustNew(jsonfile.Config{File: file, TestHook: nil}),
+	}
+
+	tasker := cli.New(config)
 	status := tasker.Dispatch(ctx, os.Args[1:])
 
 	os.Exit(status)

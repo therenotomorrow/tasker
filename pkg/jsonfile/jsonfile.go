@@ -14,8 +14,11 @@ const (
 	defaultFilePerm = 0o600
 )
 
+var ErrFileIsNotJSON = errors.New("file is not *.json")
+
 type Config struct {
-	File string
+	File     string
+	TestHook func(file *os.File)
 }
 
 type JSONFile[T any] struct {
@@ -24,12 +27,14 @@ type JSONFile[T any] struct {
 }
 
 func New[T any](config Config) (*JSONFile[T], error) {
-	filename, err := createIfNotExist(config.File)
+	file := &JSONFile[T]{config: config, filename: config.File}
+
+	err := file.init()
 	if err != nil {
 		return nil, err
 	}
 
-	return &JSONFile[T]{config: config, filename: filename}, nil
+	return file, nil
 }
 
 func (fs *JSONFile[T]) Load() (T, error) {
@@ -69,24 +74,32 @@ func (fs *JSONFile[T]) Save(data T) error {
 	return nil
 }
 
-func createIfNotExist(filename string) (string, error) {
-	filename = filepath.Clean(filename)
+func (fs *JSONFile[T]) init() error {
+	fs.filename = filepath.Clean(fs.filename)
 
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, defaultFilePerm)
+	if filepath.Ext(fs.filename) != ".json" {
+		return ErrFileIsNotJSON
+	}
+
+	file, err := os.OpenFile(fs.filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, defaultFilePerm)
 
 	switch {
 	case errors.Is(err, os.ErrExist):
-		return filename, nil
+		return nil
 	case err != nil:
-		return "", fmt.Errorf("%s error: %w", name, err)
+		return fmt.Errorf("%s error: %w", name, err)
 	}
 
 	defer func() { _ = file.Close() }()
 
-	_, err = file.WriteString("{}")
-	if err != nil {
-		return "", fmt.Errorf("%s error: %w", name, err)
+	if fs.config.TestHook != nil {
+		fs.config.TestHook(file)
 	}
 
-	return filename, nil
+	_, err = file.WriteString("{}")
+	if err != nil {
+		return fmt.Errorf("%s error: %w", name, err)
+	}
+
+	return nil
 }

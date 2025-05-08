@@ -39,7 +39,7 @@ func TestIntegrationNew(t *testing.T) {
 	}{
 		{
 			name: "cannot find file",
-			args: args{config: jsonfile.Config{File: string([]byte{0})}},
+			args: args{config: jsonfile.Config{File: string([]byte{0}) + ".json"}},
 			want: "Storage error: JSONFile error: open",
 		},
 		{
@@ -221,7 +221,7 @@ func TestIntegrationStorageSaveTask(t *testing.T) {
 
 	got, err := stor.SaveTask(ctx, task)
 	if err == nil || got != nil {
-		t.Fatalf("SaveTask() should failed, got = %v", err)
+		t.Fatalf("SaveTask() got = %v, error = %v, want = %v", got, err, nil)
 	}
 
 	_ = os.Remove(filename)
@@ -229,7 +229,7 @@ func TestIntegrationStorageSaveTask(t *testing.T) {
 
 	got, err = stor.SaveTask(ctx, task)
 	if err == nil || got != nil {
-		t.Fatalf("SaveTask() should failed, got = %v", err)
+		t.Fatalf("SaveTask() got = %v, error = %v, want = %v", got, err, nil)
 	}
 }
 
@@ -250,7 +250,7 @@ func TestIntegrationStorageUpdateTask(t *testing.T) {
 
 	err := stor.UpdateTask(ctx, task)
 	if err == nil {
-		t.Fatalf("UpdateTask() should failed, got = %v", err)
+		t.Fatalf("UpdateTask() error = %v, want = %v", err, nil)
 	}
 
 	_ = os.Remove(filename)
@@ -258,7 +258,7 @@ func TestIntegrationStorageUpdateTask(t *testing.T) {
 
 	err = stor.UpdateTask(ctx, task)
 	if err == nil {
-		t.Fatalf("UpdateTask() should failed, got = %v", err)
+		t.Fatalf("UpdateTask() error = %v, want = %v", err, nil)
 	}
 }
 
@@ -279,7 +279,7 @@ func TestIntegrationStorageDeleteTask(t *testing.T) {
 
 	err := stor.DeleteTask(ctx, task)
 	if err == nil {
-		t.Fatalf("DeleteTask() should failed, got = %v", err)
+		t.Fatalf("DeleteTask() error = %v, want = %v", err, nil)
 	}
 
 	_ = os.Remove(filename)
@@ -287,7 +287,7 @@ func TestIntegrationStorageDeleteTask(t *testing.T) {
 
 	err = stor.DeleteTask(ctx, task)
 	if err == nil {
-		t.Fatalf("DeleteTask() should failed, got = %v", err)
+		t.Fatalf("DeleteTask() error = %v, want = %v", err, nil)
 	}
 }
 
@@ -308,7 +308,7 @@ func TestIntegrationStorageGetByID(t *testing.T) {
 
 	got, err := stor.GetByID(ctx, tid)
 	if err == nil || got != nil {
-		t.Fatalf("GetByID() should failed, got = %v", err)
+		t.Fatalf("GetByID() got = %v, error = %v, want = %v", got, err, nil)
 	}
 
 	_ = os.Remove(filename)
@@ -316,7 +316,7 @@ func TestIntegrationStorageGetByID(t *testing.T) {
 
 	got, err = stor.GetByID(ctx, tid)
 	if !errors.Is(err, domain.ErrTaskNotFound) || got != nil {
-		t.Fatalf("GetByID() error = %v, want = %v", err, domain.ErrTaskNotFound)
+		t.Fatalf("GetByID() got = %v, error = %v, want = %v", got, err, domain.ErrTaskNotFound)
 	}
 }
 
@@ -336,7 +336,7 @@ func TestIntegrationStorageListAll(t *testing.T) {
 
 	got, err := stor.ListAll(ctx)
 	if err == nil || len(got) != 0 {
-		t.Fatalf("ListAll() should failed, got = %v", err)
+		t.Fatalf("ListAll() got = %v, error = %v, want = %v", got, err, nil)
 	}
 }
 
@@ -356,6 +356,6 @@ func TestIntegrationStorageListByStatus(t *testing.T) {
 
 	got, err := stor.ListByStatus(ctx, domain.StatusDone)
 	if err == nil || len(got) != 0 {
-		t.Fatalf("ListByStatus() should failed, got = %v", err)
+		t.Fatalf("ListByStatus() got = %v, error = %v, want = %v", got, err, nil)
 	}
 }

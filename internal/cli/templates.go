@@ -1,17 +1,13 @@
 package cli
 
 import (
-	"errors"
-	"os"
 	"strconv"
 	"text/template"
 )
 
 const namespace = "tasker"
 
-func compileTemplates() (*template.Template, error) {
-	var errs error
-
+func compileTemplates() *template.Template {
 	templates := template.New(namespace)
 
 	for name, body := range map[int]string{
@@ -33,11 +29,10 @@ func compileTemplates() (*template.Template, error) {
 
 		helpTpl: helpBody,
 	} {
-		_, err := templates.New(strconv.Itoa(name)).Parse(body + "\n")
-		errs = errors.Join(errs, err)
+		_, _ = templates.New(strconv.Itoa(name)).Parse(body + "\n")
 	}
 
-	return templates, errs
+	return templates
 }
 
 const (
@@ -63,55 +58,55 @@ const (
 )
 
 func (cli *Cli) errNotEnoughArgs(command string) int {
-	_ = cli.template(notEnoughArgsTpl).Execute(os.Stdout, map[string]string{"Command": command})
+	_ = cli.template(notEnoughArgsTpl).Execute(cli.config.Output, map[string]string{"Command": command})
 
 	return noArgs
 }
 
 func (cli *Cli) errUnknownCommand(command string) int {
-	_ = cli.template(unknownCommandTpl).Execute(os.Stdout, map[string]string{"Command": command})
+	_ = cli.template(unknownCommandTpl).Execute(cli.config.Output, map[string]string{"Command": command})
 
 	return failure
 }
 
 func (cli *Cli) errInvalidTaskID(id string) int {
-	_ = cli.template(invalidTaskIDTpl).Execute(os.Stdout, map[string]string{"TaskID": id})
+	_ = cli.template(invalidTaskIDTpl).Execute(cli.config.Output, map[string]string{"TaskID": id})
 
 	return invalid
 }
 
 func (cli *Cli) errInvalidDescription() int {
-	_ = cli.template(invalidDescriptionTpl).Execute(os.Stdout, nil)
+	_ = cli.template(invalidDescriptionTpl).Execute(cli.config.Output, nil)
 
 	return invalid
 }
 
 func (cli *Cli) errInvalidStatus() int {
-	_ = cli.template(invalidStatusTpl).Execute(os.Stdout, nil)
+	_ = cli.template(invalidStatusTpl).Execute(cli.config.Output, nil)
 
 	return invalid
 }
 
 func (cli *Cli) errTaskNotFound(id string) int {
-	_ = cli.template(taskNotFoundTpl).Execute(os.Stdout, map[string]string{"TaskID": id})
+	_ = cli.template(taskNotFoundTpl).Execute(cli.config.Output, map[string]string{"TaskID": id})
 
 	return failure
 }
 
 func (cli *Cli) errUnexpected(err error) int {
-	_ = cli.template(unexpectedErrorTpl).Execute(os.Stdout, map[string]string{"Error": err.Error()})
+	_ = cli.template(unexpectedErrorTpl).Execute(cli.config.Output, map[string]string{"Error": err.Error()})
 
 	return unknown
 }
 
 func (cli *Cli) errTaskAlreadyDone() int {
-	_ = cli.template(taskAlreadyDoneTpl).Execute(os.Stdout, nil)
+	_ = cli.template(taskAlreadyDoneTpl).Execute(cli.config.Output, nil)
 
 	return failure
 }
 
 func (cli *Cli) errTaskListIsEmpty() int {
-	_ = cli.template(taskListIsEmptyTpl).Execute(os.Stdout, nil)
+	_ = cli.template(taskListIsEmptyTpl).Execute(cli.config.Output, nil)
 
 	return failure
 }
