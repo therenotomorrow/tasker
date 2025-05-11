@@ -46,3 +46,16 @@ func TestUnitNewStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitAllStatus(t *testing.T) {
+	t.Parallel()
+
+	got := domain.AllStatus()
+	want := []string{"todo", "progress", "done"}
+
+	for idx, status := range got {
+		if string(status) != want[idx] {
+			t.Errorf("AllStatus() got = %v, want = %v", status, want[idx])
+		}
+	}
+}

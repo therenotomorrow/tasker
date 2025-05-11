@@ -8,73 +8,17 @@ import (
 	"time"
 
 	"github.com/therenotomorrow/tasker/internal/domain"
+	"github.com/therenotomorrow/tasker/internal/storage"
 	"github.com/therenotomorrow/tasker/internal/usecases"
 	"github.com/therenotomorrow/tasker/pkg/testkit"
 )
 
-const TaskNotFoundTest = "task not found"
-
-type StorageMock struct {
-	SaveTaskFunc     func(ctx context.Context, task *domain.Task) (*domain.Task, error)
-	UpdateTaskFunc   func(ctx context.Context, task *domain.Task) error
-	DeleteTaskFunc   func(ctx context.Context, task *domain.Task) error
-	GetByIDFunc      func(ctx context.Context, tid uint64) (*domain.Task, error)
-	ListAllFunc      func(ctx context.Context) ([]*domain.Task, error)
-	ListByStatusFunc func(ctx context.Context, status domain.Status) ([]*domain.Task, error)
-}
-
-func (s *StorageMock) SaveTask(ctx context.Context, task *domain.Task) (*domain.Task, error) {
-	if s.SaveTaskFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.SaveTaskFunc(ctx, task)
-}
-
-func (s *StorageMock) UpdateTask(ctx context.Context, task *domain.Task) error {
-	if s.UpdateTaskFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.UpdateTaskFunc(ctx, task)
-}
-
-func (s *StorageMock) DeleteTask(ctx context.Context, task *domain.Task) error {
-	if s.DeleteTaskFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.DeleteTaskFunc(ctx, task)
-}
-
-func (s *StorageMock) GetByID(ctx context.Context, tid uint64) (*domain.Task, error) {
-	if s.GetByIDFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.GetByIDFunc(ctx, tid)
-}
-
-func (s *StorageMock) ListAll(ctx context.Context) ([]*domain.Task, error) {
-	if s.ListAllFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.ListAllFunc(ctx)
-}
-
-func (s *StorageMock) ListByStatus(ctx context.Context, status domain.Status) ([]*domain.Task, error) {
-	if s.ListByStatusFunc == nil {
-		panic(testkit.ErrUnimplemented)
-	}
-
-	return s.ListByStatusFunc(ctx, status)
-}
+const taskNotFoundTest = "task not found"
 
 func TestUnitNew(t *testing.T) {
 	t.Parallel()
 
-	use := usecases.New(new(StorageMock))
+	use := usecases.New(new(storage.Mock))
 
 	if use == nil {
 		t.Errorf("New() got = %v, want = %v", use, new(usecases.UseCases))
@@ -130,9 +74,9 @@ func TestUnitUseCasesAddTask(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			storage := new(StorageMock)
+			stor := new(storage.Mock)
 
-			storage.SaveTaskFunc = func(ctx context.Context, task *domain.Task) (*domain.Task, error) {
+			stor.SaveTaskFunc = func(ctx context.Context, task *domain.Task) (*domain.Task, error) {
 				var err error
 
 				switch test.name {
@@ -146,7 +90,7 @@ func TestUnitUseCasesAddTask(t *testing.T) {
 			}
 
 			ctx := t.Context()
-			use := usecases.New(storage)
+			use := usecases.New(stor)
 			got, err := use.AddTask(ctx, test.args.description)
 
 			if !errors.Is(err, test.want.err) {
@@ -204,7 +148,7 @@ func TestUnitUseCasesUpdateTask(t *testing.T) {
 			want: want{err: domain.ErrEmptyDescription},
 		},
 		{
-			name: TaskNotFoundTest,
+			name: taskNotFoundTest,
 			args: args{tid: "0", description: "some description"},
 			want: want{err: domain.ErrTaskNotFound},
 		},
@@ -229,16 +173,16 @@ func TestUnitUseCasesUpdateTask(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			storage := new(StorageMock)
+			stor := new(storage.Mock)
 
-			storage.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
-				if test.name == TaskNotFoundTest {
+			stor.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
+				if test.name == taskNotFoundTest {
 					return nil, domain.ErrTaskNotFound
 				}
 
 				return &domain.Task{ID: 1, Description: "old description", Status: domain.StatusDone}, nil
 			}
-			storage.UpdateTaskFunc = func(ctx context.Context, task *domain.Task) error {
+			stor.UpdateTaskFunc = func(ctx context.Context, task *domain.Task) error {
 				if test.name == testkit.FailureTest {
 					return testkit.ErrDummy
 				}
@@ -247,7 +191,7 @@ func TestUnitUseCasesUpdateTask(t *testing.T) {
 			}
 
 			ctx := t.Context()
-			use := usecases.New(storage)
+			use := usecases.New(stor)
 			got, err := use.UpdateTask(ctx, test.args.tid, test.args.description)
 
 			if !errors.Is(err, test.want.err) {
@@ -279,7 +223,7 @@ func TestUnitUseCasesDeleteTask(t *testing.T) {
 	}{
 		{name: "invalid taskID", args: args{tid: "invalid"}, want: domain.ErrInvalidTaskID},
 		{name: "negative taskID", args: args{tid: "-1"}, want: domain.ErrInvalidTaskID},
-		{name: TaskNotFoundTest, args: args{tid: "0"}, want: domain.ErrTaskNotFound},
+		{name: taskNotFoundTest, args: args{tid: "0"}, want: domain.ErrTaskNotFound},
 		{name: testkit.FailureTest, args: args{tid: "1"}, want: testkit.ErrDummy},
 		{name: testkit.SuccessTest, args: args{tid: "1"}, want: nil},
 	}
@@ -288,16 +232,16 @@ func TestUnitUseCasesDeleteTask(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			storage := new(StorageMock)
+			stor := new(storage.Mock)
 
-			storage.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
-				if test.name == TaskNotFoundTest {
+			stor.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
+				if test.name == taskNotFoundTest {
 					return nil, domain.ErrTaskNotFound
 				}
 
 				return &domain.Task{ID: 1, Description: "description", Status: domain.StatusDone}, nil
 			}
-			storage.DeleteTaskFunc = func(ctx context.Context, task *domain.Task) error {
+			stor.DeleteTaskFunc = func(ctx context.Context, task *domain.Task) error {
 				if test.name == testkit.FailureTest {
 					return testkit.ErrDummy
 				}
@@ -306,7 +250,7 @@ func TestUnitUseCasesDeleteTask(t *testing.T) {
 			}
 
 			ctx := t.Context()
-			use := usecases.New(storage)
+			use := usecases.New(stor)
 			err := use.DeleteTask(ctx, test.args.tid)
 
 			if !errors.Is(err, test.want) {
@@ -355,7 +299,7 @@ func TestUnitUseCasesMarkTask(t *testing.T) {
 			want: want{err: domain.ErrInvalidStatus},
 		},
 		{
-			name: TaskNotFoundTest,
+			name: taskNotFoundTest,
 			args: args{tid: "0", mark: "todo"},
 			want: want{err: domain.ErrTaskNotFound},
 		},
@@ -384,11 +328,11 @@ func TestUnitUseCasesMarkTask(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			storage := new(StorageMock)
+			stor := new(storage.Mock)
 
-			storage.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
+			stor.GetByIDFunc = func(ctx context.Context, tid uint64) (*domain.Task, error) {
 				switch test.name {
-				case TaskNotFoundTest:
+				case taskNotFoundTest:
 					return nil, domain.ErrTaskNotFound
 				case "task is done":
 					return &domain.Task{ID: 1, Status: domain.StatusDone}, nil
@@ -396,7 +340,7 @@ func TestUnitUseCasesMarkTask(t *testing.T) {
 
 				return &domain.Task{ID: 1, Status: domain.StatusTodo}, nil
 			}
-			storage.UpdateTaskFunc = func(ctx context.Context, task *domain.Task) error {
+			stor.UpdateTaskFunc = func(ctx context.Context, task *domain.Task) error {
 				if test.name == testkit.FailureTest {
 					return testkit.ErrDummy
 				}
@@ -405,7 +349,7 @@ func TestUnitUseCasesMarkTask(t *testing.T) {
 			}
 
 			ctx := t.Context()
-			use := usecases.New(storage)
+			use := usecases.New(stor)
 			got, err := use.MarkTask(ctx, test.args.tid, test.args.mark)
 
 			if !errors.Is(err, test.want.err) {
@@ -482,9 +426,9 @@ func TestUnitUseCasesListTasks(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			storage := new(StorageMock)
+			stor := new(storage.Mock)
 
-			storage.ListAllFunc = func(ctx context.Context) ([]*domain.Task, error) {
+			stor.ListAllFunc = func(ctx context.Context) ([]*domain.Task, error) {
 				switch test.name {
 				case "empty list":
 					return make([]*domain.Task, 0), nil
@@ -494,7 +438,7 @@ func TestUnitUseCasesListTasks(t *testing.T) {
 
 				return []*domain.Task{{ID: 1, Status: domain.StatusDone}, {ID: 2, Status: domain.StatusTodo}}, nil
 			}
-			storage.ListByStatusFunc = func(ctx context.Context, status domain.Status) ([]*domain.Task, error) {
+			stor.ListByStatusFunc = func(ctx context.Context, status domain.Status) ([]*domain.Task, error) {
 				if test.name == "list by status failure" {
 					return nil, testkit.ErrDummy
 				}
@@ -510,7 +454,7 @@ func TestUnitUseCasesListTasks(t *testing.T) {
 			}
 
 			ctx := t.Context()
-			use := usecases.New(storage)
+			use := usecases.New(stor)
 			got, err := use.ListTasks(ctx, test.args.params)
 
 			if !errors.Is(err, test.want.err) {

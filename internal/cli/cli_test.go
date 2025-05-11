@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"testing"
@@ -81,5 +82,18 @@ func TestUnitCliDispatch(t *testing.T) {
 				t.Errorf("Dispatch() got = %v, want = %v", got, test.want)
 			}
 		})
+	}
+
+	ctx := t.Context()
+	buffer := bytes.NewBuffer(nil)
+	tasker := cli.New(cli.Config{Output: buffer})
+
+	tasker.Dispatch(ctx, []string{"run"})
+
+	// new line must be at the end of output
+	want := "error: unknown command \"run\"\n"
+
+	if got := buffer.String(); got != want {
+		t.Errorf("Dispatch() got = %v, want = %v", got, want)
 	}
 }

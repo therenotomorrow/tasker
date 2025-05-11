@@ -19,8 +19,6 @@ linters:
           - exhaustruct
 
 formatters:
-  exclusions:
-
   enable:
     - gci
     - gofmt
@@ -33,9 +31,6 @@ formatters:
         - standard
         - default
         - prefix(github.com/therenotomorrow/tasker)
-#      no-inline-comments: true
-#      no-prefix-comments: true
-#      custom-order: true
     gofmt:
       simplify: true
       rewrite-rules:

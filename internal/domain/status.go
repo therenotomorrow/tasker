@@ -17,3 +17,7 @@ func NewStatus(raw string) (Status, error) {
 		return "", ErrInvalidStatus
 	}
 }
+
+func AllStatus() []Status {
+	return []Status{StatusTodo, StatusProgress, StatusDone}
+}

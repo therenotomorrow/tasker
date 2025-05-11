@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"time"
 
@@ -27,7 +26,7 @@ func (cli *Cli) Add(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(addTaskTpl).Execute(os.Stdout, map[string]uint64{"TaskID": task.ID})
+	_ = cli.template(addTaskTpl).Execute(cli.config.Output, map[string]uint64{"TaskID": task.ID})
 
 	return success
 }
@@ -51,7 +50,7 @@ func (cli *Cli) Update(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(updateTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(updateTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
@@ -73,7 +72,7 @@ func (cli *Cli) Delete(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(deleteTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(deleteTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
@@ -94,12 +93,12 @@ func (cli *Cli) Mark(ctx context.Context, args []string) int {
 	case errors.Is(err, domain.ErrTaskAlreadyDone):
 		return cli.errTaskAlreadyDone()
 	case errors.Is(err, domain.ErrInvalidStatus):
-		return cli.errInvalidStatus()
+		return cli.errInvalidStatus(domain.AllStatus())
 	case err != nil:
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(markTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(markTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
@@ -160,7 +159,7 @@ func (cli *Cli) List(ctx context.Context, args []string) int {
 
 	switch {
 	case errors.Is(err, domain.ErrInvalidStatus):
-		return cli.errInvalidStatus()
+		return cli.errInvalidStatus(domain.AllStatus())
 	case errors.Is(err, domain.ErrEmptyTasks):
 		return cli.errTaskListIsEmpty()
 	case err != nil:
@@ -184,13 +183,13 @@ func (cli *Cli) List(ctx context.Context, args []string) int {
 		return b.UpdatedAt.Compare(a.UpdatedAt)
 	})
 
-	_ = cli.template(listTaskTpl).Execute(os.Stdout, views)
+	_ = cli.template(listTaskTpl).Execute(cli.config.Output, views)
 
 	return success
 }
 
 func (cli *Cli) Help() int {
-	_ = cli.template(helpTpl).Execute(os.Stdout, nil)
+	_ = cli.template(helpTpl).Execute(cli.config.Output, nil)
 
 	return success
 }

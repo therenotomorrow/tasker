@@ -49,7 +49,12 @@ func (cli *Cli) Dispatch(ctx context.Context, args []string) int {
 
 	command, args := args[0], args[1:]
 
-	return cli.dispatch(ctx, command, args)
+	status := cli.dispatch(ctx, command, args)
+
+	// end output with new line
+	_, _ = cli.config.Output.Write([]byte{'\n'})
+
+	return status
 }
 
 func (cli *Cli) dispatch(ctx context.Context, command string, args []string) int {
