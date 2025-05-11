@@ -2,11 +2,14 @@ tasker
 ======
 
 <p>
-<a href="https://github.com/fastapi/fastapi/actions?query=workflow%3ATest+event%3Apush+branch%3Amaster" target="_blank">
-    <img src="https://github.com/fastapi/fastapi/actions/workflows/test.yml/badge.svg?event=push&branch=master" alt="CI">
+<a href="https://github.com/therenotomorrow/tasker/actions?query=workflow%3ACI+event%3Apush+branch%3Amaster" target="_blank">
+    <img src="https://github.com/therenotomorrow/tasker/actions/workflows/ci.yml/badge.svg?event=push&branch=master" alt="CI">
 </a>
 <a href="https://codecov.io/gh/therenotomorrow/tasker" target="_blank">
     <img src="https://codecov.io/gh/therenotomorrow/tasker/graph/badge.svg?token=CGYK1Y72S2" alt="Coverage">
+</a>
+<a href="https://github.com/therenotomorrow/tasker/releases" target="_blank">
+    <img src="https://img.shields.io/github/v/release/therenotomorrow/tasker" alt="Releases">
 </a>
 </p>
 
