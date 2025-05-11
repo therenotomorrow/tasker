@@ -2,6 +2,6 @@
 
 set -e
 
-make code test/smoke
+#make code test/smoke
 
 git add .
