@@ -1,15 +1,25 @@
 tasker
 ======
 
+<p>
+<a href="https://github.com/fastapi/fastapi/actions?query=workflow%3ATest+event%3Apush+branch%3Amaster" target="_blank">
+    <img src="https://github.com/fastapi/fastapi/actions/workflows/test.yml/badge.svg?event=push&branch=master" alt="CI">
+</a>
+<a href="https://codecov.io/gh/therenotomorrow/tasker" target="_blank">
+    <img src="https://codecov.io/gh/therenotomorrow/tasker/graph/badge.svg?token=CGYK1Y72S2" alt="Coverage">
+</a>
+</p>
+
 > One of [roadmap.sh](https://roadmap.sh/projects) project. This is my small hobby.
 
 Goal
 ----
 
 `tasker` is a project used to track and manage tasks. It is a simple command line interface to track:
- - what you need to do
- - what you have done
- - what you are currently working on
+
+- what you need to do
+- what you have done
+- what you are currently working on
 
 System Requirements
 -------------------
