@@ -2,8 +2,11 @@ package cli
 
 import (
 	"context"
-	"tasker/internal/usecases"
+	"io"
+	"os"
 	"text/template"
+
+	"github.com/therenotomorrow/tasker/internal/usecases"
 )
 
 const (
@@ -17,58 +20,62 @@ const (
 	twoArgs = 2
 )
 
+type Config struct {
+	Output  io.Writer
+	Storage usecases.Storage
+}
+
 type Cli struct {
-	useCases  *usecases.UseCases
+	config    Config
+	use       *usecases.UseCases
 	templates *template.Template
 }
 
-func New(storage usecases.Storage) (*Cli, error) {
-	templates, err := compileTemplates()
-	if err != nil {
-		return nil, err
+func New(config Config) *Cli {
+	use := usecases.New(config.Storage)
+	templates := compileTemplates()
+
+	if config.Output == nil {
+		config.Output = os.Stdout
 	}
 
-	return &Cli{useCases: usecases.New(storage), templates: templates}, nil
-}
-
-func MustNew(storage usecases.Storage) *Cli {
-	cli, err := New(storage)
-	if err != nil {
-		panic(err)
-	}
-
-	return cli
+	return &Cli{use: use, config: config, templates: templates}
 }
 
 func (cli *Cli) Dispatch(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
-		return cli.usage()
+		return cli.Usage()
 	}
 
 	command, args := args[0], args[1:]
 
-	return cli.dispatch(ctx, command, args)
+	status := cli.dispatch(ctx, command, args)
+
+	// end output with new line
+	_, _ = cli.config.Output.Write([]byte{'\n'})
+
+	return status
 }
 
 func (cli *Cli) dispatch(ctx context.Context, command string, args []string) int {
 	switch command {
 	case "add":
-		return cli.add(ctx, args)
+		return cli.Add(ctx, args)
 	case "update":
-		return cli.update(ctx, args)
+		return cli.Update(ctx, args)
 	case "delete":
-		return cli.delete(ctx, args)
+		return cli.Delete(ctx, args)
 	case "mark":
-		return cli.mark(ctx, args)
+		return cli.Mark(ctx, args)
 	case "work":
-		return cli.work(ctx, args)
+		return cli.Work(ctx, args)
 	case "done":
-		return cli.done(ctx, args)
+		return cli.Done(ctx, args)
 	case "list":
-		return cli.list(ctx, args)
+		return cli.List(ctx, args)
 	case "help":
-		return cli.help()
+		return cli.Help()
 	default:
-		return cli.unknown(command)
+		return cli.Unknown(command)
 	}
 }

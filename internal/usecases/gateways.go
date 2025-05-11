@@ -2,7 +2,8 @@ package usecases
 
 import (
 	"context"
-	"tasker/internal/domain"
+
+	"github.com/therenotomorrow/tasker/internal/domain"
 )
 
 type Saver interface {
@@ -14,7 +15,7 @@ type Updater interface {
 }
 
 type Deleter interface {
-	DeleteTask(ctx context.Context, tid uint64) error
+	DeleteTask(ctx context.Context, task *domain.Task) error
 }
 
 type Retriever interface {

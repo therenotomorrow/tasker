@@ -4,20 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"slices"
-	"tasker/internal/domain"
-	"tasker/internal/usecases"
 	"time"
+
+	"github.com/therenotomorrow/tasker/internal/domain"
+	"github.com/therenotomorrow/tasker/internal/usecases"
 )
 
-func (cli *Cli) add(ctx context.Context, args []string) int {
+func (cli *Cli) Add(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
 		return cli.errNotEnoughArgs("add")
 	}
 
 	description := args[0]
-	task, err := cli.useCases.AddTask(ctx, description)
+	task, err := cli.use.AddTask(ctx, description)
 
 	switch {
 	case errors.Is(err, domain.ErrEmptyDescription):
@@ -26,18 +26,18 @@ func (cli *Cli) add(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(addTaskTpl).Execute(os.Stdout, map[string]uint64{"TaskID": task.ID})
+	_ = cli.template(addTaskTpl).Execute(cli.config.Output, map[string]uint64{"TaskID": task.ID})
 
 	return success
 }
 
-func (cli *Cli) update(ctx context.Context, args []string) int {
+func (cli *Cli) Update(ctx context.Context, args []string) int {
 	if len(args) < twoArgs {
 		return cli.errNotEnoughArgs("update")
 	}
 
 	taskID, newDesc := args[0], args[1]
-	_, err := cli.useCases.UpdateTask(ctx, taskID, newDesc)
+	_, err := cli.use.UpdateTask(ctx, taskID, newDesc)
 
 	switch {
 	case errors.Is(err, domain.ErrEmptyDescription):
@@ -50,18 +50,18 @@ func (cli *Cli) update(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(updateTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(updateTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
 
-func (cli *Cli) delete(ctx context.Context, args []string) int {
+func (cli *Cli) Delete(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
 		return cli.errNotEnoughArgs("delete")
 	}
 
 	taskID := args[0]
-	err := cli.useCases.DeleteTask(ctx, taskID)
+	err := cli.use.DeleteTask(ctx, taskID)
 
 	switch {
 	case errors.Is(err, domain.ErrTaskNotFound):
@@ -72,18 +72,18 @@ func (cli *Cli) delete(ctx context.Context, args []string) int {
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(deleteTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(deleteTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
 
-func (cli *Cli) mark(ctx context.Context, args []string) int {
+func (cli *Cli) Mark(ctx context.Context, args []string) int {
 	if len(args) < twoArgs {
 		return cli.errNotEnoughArgs("mark")
 	}
 
 	taskID, status := args[0], args[1]
-	_, err := cli.useCases.MarkTask(ctx, taskID, status)
+	_, err := cli.use.MarkTask(ctx, taskID, status)
 
 	switch {
 	case errors.Is(err, domain.ErrTaskNotFound):
@@ -93,34 +93,34 @@ func (cli *Cli) mark(ctx context.Context, args []string) int {
 	case errors.Is(err, domain.ErrTaskAlreadyDone):
 		return cli.errTaskAlreadyDone()
 	case errors.Is(err, domain.ErrInvalidStatus):
-		return cli.errInvalidStatus()
+		return cli.errInvalidStatus(domain.AllStatus())
 	case err != nil:
 		return cli.errUnexpected(err)
 	}
 
-	_ = cli.template(markTaskTpl).Execute(os.Stdout, nil)
+	_ = cli.template(markTaskTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
 
-func (cli *Cli) work(ctx context.Context, args []string) int {
+func (cli *Cli) Work(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
 		return cli.errNotEnoughArgs("work")
 	}
 
 	args = append(args, string(domain.StatusProgress))
 
-	return cli.mark(ctx, args)
+	return cli.Mark(ctx, args)
 }
 
-func (cli *Cli) done(ctx context.Context, args []string) int {
+func (cli *Cli) Done(ctx context.Context, args []string) int {
 	if len(args) < oneArg {
 		return cli.errNotEnoughArgs("done")
 	}
 
 	args = append(args, string(domain.StatusDone))
 
-	return cli.mark(ctx, args)
+	return cli.Mark(ctx, args)
 }
 
 type listView struct {
@@ -149,17 +149,17 @@ func lastUpdateString(t time.Time) string {
 	return lastUpdate
 }
 
-func (cli *Cli) list(ctx context.Context, args []string) int {
+func (cli *Cli) List(ctx context.Context, args []string) int {
 	status := ""
 	if len(args) > 0 {
 		status = args[0]
 	}
 
-	list, err := cli.useCases.ListTasks(ctx, usecases.ListParams{Status: status})
+	list, err := cli.use.ListTasks(ctx, usecases.ListParams{Status: status})
 
 	switch {
 	case errors.Is(err, domain.ErrInvalidStatus):
-		return cli.errInvalidStatus()
+		return cli.errInvalidStatus(domain.AllStatus())
 	case errors.Is(err, domain.ErrEmptyTasks):
 		return cli.errTaskListIsEmpty()
 	case err != nil:
@@ -180,26 +180,26 @@ func (cli *Cli) list(ctx context.Context, args []string) int {
 	}
 
 	slices.SortStableFunc(views, func(a, b listView) int {
-		return -a.UpdatedAt.Compare(b.UpdatedAt)
+		return b.UpdatedAt.Compare(a.UpdatedAt)
 	})
 
-	_ = cli.template(listTaskTpl).Execute(os.Stdout, views)
+	_ = cli.template(listTaskTpl).Execute(cli.config.Output, views)
 
 	return success
 }
 
-func (cli *Cli) help() int {
-	_ = cli.template(helpTpl).Execute(os.Stdout, nil)
+func (cli *Cli) Help() int {
+	_ = cli.template(helpTpl).Execute(cli.config.Output, nil)
 
 	return success
 }
 
-func (cli *Cli) usage() int {
-	_ = cli.help()
+func (cli *Cli) Usage() int {
+	_ = cli.Help()
 
 	return noArgs
 }
 
-func (cli *Cli) unknown(command string) int {
+func (cli *Cli) Unknown(command string) int {
 	return cli.errUnknownCommand(command)
 }

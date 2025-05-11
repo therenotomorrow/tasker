@@ -3,8 +3,9 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"tasker/internal/domain"
 	"time"
+
+	"github.com/therenotomorrow/tasker/internal/domain"
 )
 
 type UseCases struct {
@@ -15,7 +16,7 @@ func New(storage Storage) *UseCases {
 	return &UseCases{storage: storage}
 }
 
-func (use UseCases) AddTask(ctx context.Context, description string) (*domain.Task, error) {
+func (use *UseCases) AddTask(ctx context.Context, description string) (*domain.Task, error) {
 	const where = "AddTask"
 
 	description, err := use.validateDescription(description)
@@ -40,15 +41,15 @@ func (use UseCases) AddTask(ctx context.Context, description string) (*domain.Ta
 	return task, nil
 }
 
-func (use UseCases) UpdateTask(ctx context.Context, tid string, description string) (*domain.Task, error) {
+func (use *UseCases) UpdateTask(ctx context.Context, tid string, description string) (*domain.Task, error) {
 	const where = "UpdateTask"
 
-	description, err := use.validateDescription(description)
+	taskID, err := use.validateTaskID(tid)
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", where, err)
 	}
 
-	taskID, err := use.validateTaskID(tid)
+	description, err = use.validateDescription(description)
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", where, err)
 	}
@@ -69,15 +70,20 @@ func (use UseCases) UpdateTask(ctx context.Context, tid string, description stri
 	return task, nil
 }
 
-func (use UseCases) DeleteTask(ctx context.Context, id string) error {
+func (use *UseCases) DeleteTask(ctx context.Context, tid string) error {
 	const where = "DeleteTask"
 
-	taskID, err := use.validateTaskID(id)
+	taskID, err := use.validateTaskID(tid)
 	if err != nil {
 		return fmt.Errorf("%s error: %w", where, err)
 	}
 
-	err = use.storage.DeleteTask(ctx, taskID)
+	task, err := use.storage.GetByID(ctx, taskID)
+	if err != nil {
+		return fmt.Errorf("%s error: %w", where, err)
+	}
+
+	err = use.storage.DeleteTask(ctx, task)
 	if err != nil {
 		return fmt.Errorf("%s error: %w", where, err)
 	}
@@ -85,15 +91,15 @@ func (use UseCases) DeleteTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (use UseCases) MarkTask(ctx context.Context, id string, want string) (*domain.Task, error) {
+func (use *UseCases) MarkTask(ctx context.Context, tid string, mark string) (*domain.Task, error) {
 	const where = "MarkTask"
 
-	taskID, err := use.validateTaskID(id)
+	taskID, err := use.validateTaskID(tid)
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", where, err)
 	}
 
-	status, err := use.validateStatus(want)
+	status, err := use.validateStatus(mark)
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", where, err)
 	}
@@ -122,7 +128,7 @@ type ListParams struct {
 	Status string
 }
 
-func (use UseCases) ListTasks(ctx context.Context, params ListParams) ([]*domain.Task, error) {
+func (use *UseCases) ListTasks(ctx context.Context, params ListParams) ([]*domain.Task, error) {
 	const where = "ListTasks"
 
 	var err error
@@ -146,6 +152,10 @@ func (use UseCases) ListTasks(ctx context.Context, params ListParams) ([]*domain
 
 	if err != nil {
 		return nil, fmt.Errorf("%s error: %w", where, err)
+	}
+
+	if len(tasks) == 0 {
+		return nil, domain.ErrEmptyTasks
 	}
 
 	return tasks, nil
