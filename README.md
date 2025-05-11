@@ -11,6 +11,9 @@ tasker
 <a href="https://github.com/therenotomorrow/tasker/releases" target="_blank">
     <img src="https://img.shields.io/github/v/release/therenotomorrow/tasker" alt="Releases">
 </a>
+<a href="https://roadmap.sh/projects/task-tracker" target="_blank">
+    <img src="https://img.shields.io/badge/project-task_tracker-blue" alt="Project">
+</a>
 </p>
 
 > One of [roadmap.sh](https://roadmap.sh/projects) project. This is my small hobby.
