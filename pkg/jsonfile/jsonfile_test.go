@@ -2,7 +2,6 @@ package jsonfile_test
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -36,13 +35,11 @@ func TestIntegrationNewNotJSON(t *testing.T) {
 func TestIntegrationNewExist(t *testing.T) {
 	t.Parallel()
 
-	filename := t.Name() + ".jsosn"
+	filename := t.Name() + ".json"
 
 	defer func() { _ = os.Remove(filename) }()
 
 	_, _ = os.Create(filepath.Clean(filename))
-
-	fmt.Println("sad")
 
 	got, err := jsonfile.New[Type](jsonfile.Config{File: filename})
 
